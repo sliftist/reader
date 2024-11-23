@@ -353,14 +353,15 @@ export class SessionView extends preact.Component {
                                     <div className={css.fillWidth.vbox(2)}>
                                         {paragraph.speakerSegmentation?.map(segment =>
                                             <div className={
-                                                css.hbox(10).wrap
+                                                css
                                                     .pad2(4, 2)
+                                                    .fontSize(10)
                                                     //.color(`hsl(${getSpeakerHue(segment.speaker)}, 50%, 80%)`)
                                                     .hsl(getSpeakerHue(segment.speaker), 50, 50)
-                                                + (segment.notAudible ? css.opacity(0.75).italic : "")
+                                                //+ (segment.notAudible ? css.opacity(0.75) : "")
                                             }>
-                                                <div className={css.minWidth(10)}>{segment.speaker}</div>
-                                                <div>{segment.text}</div>
+                                                <span className={css.width(100).display("inline-block")}>{segment.speaker} </span>
+                                                <span>{segment.text}</span>
                                             </div>
                                         )}
                                     </div>
