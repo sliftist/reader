@@ -1,8 +1,5 @@
 todonext
 
-
-8) Test on phone
-
 9) ElevenLabs model dropdown selector
 
 10) Local model runner
@@ -13,7 +10,7 @@ todonext
 10.1) Allow a model for speaking, and a model for narration
     - Also, better speaking splitting, as right now it's not great...
 
-
+11) Test all voices, and remove bad voices (the narrator/ad voices)
 
 7) Allow editting of segments directly
 

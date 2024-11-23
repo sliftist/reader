@@ -11,7 +11,9 @@ let paragraphs = new DiskCollection<Paragraph>("Paragraph");
 
 export function getSessionList(): Session[] {
     let list = sessions.getValues();
-    return list.map(x => ({ ...x, usage: x.usage || { cost: 0, tokensIn: 0, tokensOut: 0 } }));
+    list = list.map(x => ({ ...x, usage: x.usage || { cost: 0, tokensIn: 0, tokensOut: 0 } }));
+    list.reverse();
+    return list;
 }
 
 

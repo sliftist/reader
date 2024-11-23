@@ -18,7 +18,11 @@ export class SessionList extends preact.Component {
         return (
             <div className={css.vbox(10).pad2(20).fillWidth}>
                 <Header />
-                <button onClick={() => setSession({ _id: nextId(), title: `New Session at ${new Date().toLocaleString()}` })}>
+                <button onClick={() => setSession({
+                    _id: nextId(),
+                    title: `New Session at ${new Date().toLocaleString()}`,
+                    usage: { cost: 0, tokensIn: 0, tokensOut: 0 }
+                })}>
                     Add New Session
                 </button>
                 {list.map(session =>
