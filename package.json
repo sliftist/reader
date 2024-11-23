@@ -1,0 +1,33 @@
+{
+    "name": "ai-reader",
+    "version": "0.1.0",
+    "main": "index.js",
+    "license": "MIT",
+    "homepage": "https://github.com",
+    "scripts": {
+        "build": "typenode ./build.tsx",
+        "deploy": "yarn build && ssh quentinbrooks.com \"mkdir -p /root/new-site/dist/reader\" && scp -r ./build/* quentinbrooks.com:/root/new-site/dist/reader",
+        "serve": "typenode ./serve.ts",
+        "watch": "typenode ./watch.ts",
+        "type": "yarn tsc --noEmit"
+    },
+    "devDependencies": {
+        "debugbreak": "^0.9.9",
+        "typedev": "^0.1.1"
+    },
+    "dependencies": {
+        "@types/adm-zip": "^0.5.6",
+        "adm-zip": "^0.5.16",
+        "htmlfy": "^0.3.2",
+        "llama3-tokenizer-js": "^1.2.0",
+        "mobx": "^6.13.3",
+        "preact": "^10.24.2",
+        "preact-render-to-string": "^6.5.11",
+        "qrcode": "^1.5.4",
+        "socket-function": "^0.22.0",
+        "typenode": "^5.4.4",
+        "typesafecss": "^0.10.0",
+        "ws": "^8.18.0",
+        "yaml": "^2.6.1"
+    }
+}

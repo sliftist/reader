@@ -1,0 +1,34 @@
+<html>
+<head>
+    <script>
+        function isNode() {
+            return typeof window === "undefined";
+        }
+        if (!isNode()) {
+            window.process = window.process || {};
+            window.global = window.global || globalThis;
+        }
+    </script>
+    <script type="module" src="./src/buffer.js"></script>
+    <script type="module" src="./src/main.js"></script>
+    <style>
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 10px;
+            margin: 0;
+            background-color: black;
+            color: hsl(0, 0%, 100%);
+        }
+        textarea {
+            font-family: unset;
+            font-size: unset;
+        }
+        * {
+            box-sizing: border-box
+        }
+    </style>
+</head>
+<body>
+
+</body>
+</html>

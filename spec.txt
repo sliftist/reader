@@ -1,0 +1,102 @@
+todonext
+
+4) Split outputs into speakers
+    - via url checkbox, which we enable by default
+        - Also support button to do it
+    - Render different speakers via highlighting
+    - Hardcoded prompt, which uses conversation speaker mapping to help the AI map it
+    - Remaps text, displaying alternate view, with highlighting, and no editting
+        - Which can be left by unchecking the checkbox
+        - Only for the answer, of course
+
+
+5) Hook up voice api
+    - via url checkbox, which we enable by default
+        - Also support button to do it manually
+
+
+7) Test by asking for cool descriptions of cities, with multiple places that can be visited
+
+
+8) Segment + play audio WHILE output is generating
+    - If there is a newline, then we can split it
+    - Store the segmentation + audio afterwards
+    - Pass the previous output, as additional context in the segmentation
+
+8.1) Cancel support
+    - Should be fairly easy. Will be important when we are auto playing audio
+    - Via registration of cancellable things, acting as "Cancel All" type thing
+    - Should cancel everything (generation + audio playing + real time playing)
+        - So if we are just playing audio, it should still cancel that
+
+
+8) Tell the AI to add elevenlabs syntax
+    "Give me one second to think about it." <break time="1.0s" /> "Yes, that would work."
+    <phoneme alphabet="ipa" ph="ˈæktʃuəli">actually</phoneme>
+
+6) Support saving/restoring data from google drive
+    - And maybe auto saving it every... day? Or week?
+
+9) Voice caching?
+    - Mostly in case we edit a very large paragraph slightly? Although... how many times will we do that...
+
+Advanced Features
+    Two column display
+        - Outline => output model, instead of chat
+        - Two colums of textboxes on each size, which grow to the text size
+            - Two new lines make a new textbox
+        - The focused textbox is always in the center, with the corresponding output beside it (in the other column)
+            - The other boxes are rendered tightly packed
+        - Page up / page down move between textboxes?
+
+
+
+    Variable support
+        - Mostly for common prompt templates
+
+    Variables work in series, but also search other books (in which case they are just what the book exports, which is everything, but default)
+        - Exports have timestamp of the first message that set the latest value
+        - If it's is another book a button to copy from the other book is shown (for each other unique version, showing the FIRST book to have that version)
+            - Also an option to copy TO all the other versions of it, mostly to reduce all of the duplicate buttons
+            - Maybe a button to explicitly mark it as "no-import", to make the UI go away, as it might be annoying
+
+    Variable parameters
+
+        @detailed_person(Ralph)
+        @detailed_person(@protagonist)
+
+        <add detail to $0>@detailed_person
+    We could also support variables with parameters, for the purpose of choosing the context we query
+
+    Default variables
+        @prevParagraph
+        @nextParagraph
+
+    THIRD column, for chaining prompts, so we don't have to write the wrapping code each time
+        - Copies from previous when we new paragraph is created
+            - Detects identical and partial opacities, so we can ignore it most of the time
+        - Collapsable?
+
+        @history_context
+        @detailed_action_instructions
+        @weather_and_temperature_reminder
+        @no_pathetic_fallacy
+        @prevParagraphContext
+        @futureParagraphContext
+        @paragraph
+        @subject_reminder
+
+        AND, prevParagraph/nextParagraph will reference the NON context template parts, so they can be cleaner
+
+
+    Nested prompts, evaluated first
+        <{get the subject from @paragraph, @singlewordoutput}>@subject
+            - As in, the text inside the brace is evaluated, with the variables, etc, and then is placed there, which sets the subject
+
+        NOTE: If you just want to give directions, that can be done inline, such as *AI, please add description of the room here*, although that is probably best put in a variable, so that can be reused.
+
+    Better context
+        - Dynamically determine embedding query with AI
+        - Search other books, etc
+        - Use AI to filter context future
+        - Tab to see context for any prompt
