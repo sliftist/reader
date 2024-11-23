@@ -171,20 +171,61 @@ export async function playAudio(config: {
         throw new Error(`Audio not found: ${path}`);
     }
     let audio = new Audio();
-    audio.src = URL.createObjectURL(new Blob([buffer]));
-    audio.playbackRate = speed;
-    cancel?.watchCancel(() => {
-        audio.pause();
-    });
-    await audio.play();
-    // Wait until it finishes playing
-    let done = new Promise(resolve => {
-        audio.onended = resolve;
-    });
-    if (cancel) {
-        done = Promise.race([done, cancel.cancelled]);
+    try {
+        audio.src = URL.createObjectURL(new Blob([buffer], { type: "audio/mpeg" }));
+        audio.playbackRate = speed;
+
+        // // iOS requires user interaction before setting playbackRate
+        // // We need to load the audio first
+        await new Promise((resolve, reject) => {
+            audio.addEventListener("loadedmetadata", resolve);
+            audio.addEventListener("canplaythrough", resolve);
+            audio.addEventListener("error", (event) => {
+                const mediaError = (event.target as HTMLAudioElement).error;
+                reject(new Error(`Failed to load audio: ${mediaError?.code} - ${getMediaErrorMessage(mediaError)}`));
+            });
+        });
+
+        cancel?.watchCancel(() => {
+            audio.pause();
+        });
+        await audio.play();
+        // Wait until it finishes playing
+        let done = new Promise((resolve, reject) => {
+            audio.onended = resolve;
+            audio.onerror = (event: any) => {
+                const mediaError = (event.target as HTMLAudioElement).error;
+                reject(new Error(`Audio playback failed: ${mediaError?.code} - ${getMediaErrorMessage(mediaError)}`));
+            };
+        });
+        if (cancel) {
+            done = Promise.race([done, cancel.cancelled]);
+        }
+        await done;
+    } finally {
+        URL.revokeObjectURL(audio.src);
     }
-    await done;
+}
+
+function getMediaErrorMessage(error: MediaError | null): string {
+    if (!error) return "No error details available";
+
+    // Preserve the original error message if available
+    if (error.message) return error.message;
+
+    // Provide detailed fallback messages based on error code
+    switch (error.code) {
+        case MediaError.MEDIA_ERR_ABORTED:
+            return "Playback aborted by user";
+        case MediaError.MEDIA_ERR_NETWORK:
+            return "Network error while loading audio";
+        case MediaError.MEDIA_ERR_DECODE:
+            return "Audio decoding failed";
+        case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            return "Audio format or MIME type not supported";
+        default:
+            return `Unknown error (code: ${error.code})`;
+    }
 }
 
 export async function segmentSpeakers(config: {
@@ -292,12 +333,14 @@ export async function pickGoodSpeaker(config: {
 export async function encodeVoice(config: {
     segment: SpeakerSegment;
     voice: AISpec;
+    cancel: Cancellable;
 }): Promise<{
     audioPath: string;
 }> {
     // eleven_multilingual_v2 is the best
     // eleven_turbo_v2_5 is the best cheap one (although only 50% the cost)
-    const { segment, voice } = config;
+    const { segment, voice, cancel } = config;
+    if (cancel.cancel) throw new Error("Cancelled");
 
     let usdPerChar = 0.3 / 1000;
 
@@ -316,7 +359,25 @@ export async function encodeVoice(config: {
         eleven_multilingual_v1
     */
     let voiceId = voice.model;
-    let result = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    /*
+    output_format
+        string
+        default: mp3_44100_128
+        Output format of the generated audio. Must be one of:
+        mp3_22050_32 - output format, mp3 with 22.05kHz sample rate at 32kbps.
+        mp3_44100_32 - output format, mp3 with 44.1kHz sample rate at 32kbps.
+        mp3_44100_64 - output format, mp3 with 44.1kHz sample rate at 64kbps.
+        mp3_44100_96 - output format, mp3 with 44.1kHz sample rate at 96kbps.
+        mp3_44100_128 - default output format, mp3 with 44.1kHz sample rate at 128kbps.
+        mp3_44100_192 - output format, mp3 with 44.1kHz sample rate at 192kbps. Requires you to be subscribed to Creator tier or above.
+        pcm_16000 - PCM format (S16LE) with 16kHz sample rate.
+        pcm_22050 - PCM format (S16LE) with 22.05kHz sample rate.
+        pcm_24000 - PCM format (S16LE) with 24kHz sample rate.
+        pcm_44100 - PCM format (S16LE) with 44.1kHz sample rate. Requires you to be subscribed to Pro tier or above.
+        ulaw_8000 - μ-law format (sometimes written mu-law, often approximated as u-law) with 8kHz sample rate. Note that this format is commonly used for Twilio audio inputs.
+    */
+    let output_format = "mp3_44100_128";
+    let result = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=${output_format}`, {
         method: "POST",
         headers: {
             "xi-api-key": await getAPIKey("elevenlabs"),
@@ -332,6 +393,7 @@ export async function encodeVoice(config: {
                 use_speaker_boost: false,
             },
             seed: 1,
+
             //previous_text: "",
             //next_text: "",
             //previous_request_ids: [],

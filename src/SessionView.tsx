@@ -88,7 +88,7 @@ export class SessionView extends preact.Component {
 
         let input = this.input;
         async function runQuestion(question: string) {
-            const cancel = new Cancellable();
+            using cancel = new Cancellable("run question");
             self.synced.running = true;
             try {
                 setTimeout(() => input?.focus());
@@ -144,6 +144,7 @@ export class SessionView extends preact.Component {
                         let encoded = await encodeVoice({
                             segment: segment,
                             voice: sessionSpeakers.speakers[segment.speaker] || allSpeakers[0],
+                            cancel,
                         });
                         newParagraph.audio.push({
                             path: encoded.audioPath,
@@ -215,7 +216,7 @@ export class SessionView extends preact.Component {
             }
         }
         async function encodeAudio(paragraph: Paragraph) {
-            const cancel = new Cancellable();
+            using cancel = new Cancellable("encode audio");
             self.synced.encodingAudio = true;
             try {
                 if (!paragraph.speakerSegmentation) {
@@ -237,6 +238,7 @@ export class SessionView extends preact.Component {
                     let encoded = await encodeVoice({
                         segment: segment,
                         voice: sessionSpeakers.speakers[segment.speaker] || allSpeakers[0],
+                        cancel,
                     });
                     audio.push({
                         path: encoded.audioPath,
@@ -250,10 +252,14 @@ export class SessionView extends preact.Component {
             }
         }
         async function playAudioParagraph(paragraph: Paragraph) {
-            const cancel = new Cancellable();
-            if (!paragraph.audio) return;
-            for (let audio of paragraph.audio) {
-                await playAudio({ path: audio.path, speed: +playbackSpeed.value || 1, cancel });
+            try {
+                using cancel = new Cancellable("play audio");
+                if (!paragraph.audio) return;
+                for (let audio of paragraph.audio) {
+                    await playAudio({ path: audio.path, speed: +playbackSpeed.value || 1, cancel });
+                }
+            } catch (e: any) {
+                alert("caught " + String(e));
             }
         }
 
@@ -272,16 +278,17 @@ export class SessionView extends preact.Component {
                     Back
                 </Anchor>
 
-                <div className={css.hbox(20)}>
+                <div className={css.hbox(20).wrap}>
                     <InputLabelURL
-                        label="Token Limit Override"
+                        label="Context Limit"
+                        number
+                        max={chatter.maxInputTokens}
                         persisted={tokenLimitURL}
                     />
                     <InputLabelURL
                         label="Max Response Tokens"
                         persisted={maxResponseTokens}
                     />
-                    <div>(Limit {tokenLimit})</div>
                     <div>Remaining Limit {remainingLimit}</div>
                     <InputLabelURL
                         label="Playback Speed"

@@ -3,10 +3,16 @@ todonext
 
 8) Test on phone
 
-
-7) Test by asking for cool descriptions of cities, with multiple places that can be visited
-
 9) ElevenLabs model dropdown selector
+
+10) Local model runner
+    - Via providing local port?
+    - We'll have to make sure this works even if we are running it on a real site
+    - Eleven labs is too expensive! Over a dollar per 1000 tokens!
+
+10.1) Allow a model for speaking, and a model for narration
+    - Also, better speaking splitting, as right now it's not great...
+
 
 
 7) Allow editting of segments directly
@@ -41,6 +47,7 @@ todonext
     - Try to add some library voices.
     - Try to add our voice, or... other voices.
 
+10) Use eslint-plugin-no-disposable-without-using, somehow?
 
 Advanced Features
     Two column display

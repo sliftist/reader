@@ -8,6 +8,7 @@
             window.process = window.process || {};
             window.global = window.global || globalThis;
         }
+        Symbol.dispose = Symbol.dispose || Symbol("dispose");
     </script>
     <script type="module" src="./src/buffer.js"></script>
     <script type="module" src="./src/main.js"></script>

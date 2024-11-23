@@ -13,7 +13,7 @@ export class Cancellable {
     public cancelled = new Promise<void>(resolve => this.watchCancel(resolve));
 
     public cancel = false;
-    constructor() {
+    constructor(public title: string) {
         cancels[this.id] = this;
     }
     [Symbol.dispose]() {
@@ -48,7 +48,7 @@ export class GlobalCancelButton extends preact.Component {
                     cancel.doCancel();
                 }
             }}>
-                Cancel ({cancelObjs.length})
+                Cancel ({cancelObjs.map(x => x.title).join(" | ")})
             </button>
         );
     }
