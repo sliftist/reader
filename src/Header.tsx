@@ -3,6 +3,7 @@ import { observer } from "./misc/observer";
 import { PendingDisplay } from "./storage/PendingManager";
 import { css } from "typesafecss";
 import { APIKeysControl } from "./apiKeys";
+import { GlobalCancelButton } from "./cancelManagement";
 
 @observer
 export class Header extends preact.Component {
@@ -11,6 +12,7 @@ export class Header extends preact.Component {
             <div className={css.height(20).hbox(20)}>
                 <APIKeysControl />
                 <PendingDisplay />
+                <GlobalCancelButton />
             </div>
         );
     }

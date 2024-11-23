@@ -1,44 +1,46 @@
 todonext
 
-4) Split outputs into speakers
-    - via url checkbox, which we enable by default
-        - Also support button to do it
-    - Render different speakers via highlighting
-    - Hardcoded prompt, which uses conversation speaker mapping to help the AI map it
-    - Remaps text, displaying alternate view, with highlighting, and no editting
-        - Which can be left by unchecking the checkbox
-        - Only for the answer, of course
 
-
-5) Hook up voice api
-    - via url checkbox, which we enable by default
-        - Also support button to do it manually
+8) Test on phone
 
 
 7) Test by asking for cool descriptions of cities, with multiple places that can be visited
 
+9) ElevenLabs model dropdown selector
 
-8) Segment + play audio WHILE output is generating
-    - If there is a newline, then we can split it
-    - Store the segmentation + audio afterwards
-    - Pass the previous output, as additional context in the segmentation
 
-8.1) Cancel support
-    - Should be fairly easy. Will be important when we are auto playing audio
-    - Via registration of cancellable things, acting as "Cancel All" type thing
-    - Should cancel everything (generation + audio playing + real time playing)
-        - So if we are just playing audio, it should still cancel that
+7) Allow editting of segments directly
 
+8) Cache segments (at least in memory), so if there is an edit, we don't regenerate ALL of them
+    - But, ONLY if there is an edit. If they just click regenerate, without an edit, make new audio.
+
+8.1) Regenerate audio button PER segment, so we can vary performances.
+    - We need audio to be associated with the segment, instead of just flat as we are doing now
+
+9) Assign speaker persistent hues, so we can try to make sure they vary more
+
+
+10) Better speaker segmentation, to not lose narration as much?
+    - Maybe use an inline format, basically parsing speakers ourselves, and just getting the AI to inject names to help us
+        ALTHOUGH, maybe some text, such as "he said", is not needed, as... if he literally says it, then... that's completely redundant.
 
 8) Tell the AI to add elevenlabs syntax
     "Give me one second to think about it." <break time="1.0s" /> "Yes, that would work."
     <phoneme alphabet="ipa" ph="ˈæktʃuəli">actually</phoneme>
+    - ALSO, encode breaks between speakers, so we can have them cut each other off, etc
+    - ALSO, reload audio into memory when playing it, so there isn't a delay to load the audio from disk, decode it, etc
 
 6) Support saving/restoring data from google drive
     - And maybe auto saving it every... day? Or week?
 
 9) Voice caching?
     - Mostly in case we edit a very large paragraph slightly? Although... how many times will we do that...
+
+10) Custom voices
+    - Do voices we add in the site show up in our voices?
+    - Try to add some library voices.
+    - Try to add our voice, or... other voices.
+
 
 Advanced Features
     Two column display
@@ -100,3 +102,14 @@ Advanced Features
         - Search other books, etc
         - Use AI to filter context future
         - Tab to see context for any prompt
+
+    Summarization with further columns
+        - Allow adding more columns
+            - I guess only 1 or 2 summarization columns can be visible. Anymore and it just gets ridiculous
+        - Apply nested summarization code
+            - Automatically keep it update it for > 2 paragraphs old
+        - This allows us to navigate via summaries at any level
+        - Allow referencing this in the context?
+
+    Specific extraction for context
+        - Places, characters, etc

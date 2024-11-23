@@ -2,7 +2,10 @@ export type Session = {
     _id: string;
 
     title: string;
+
+    usage: ModelUsage;
 };
+
 export type SessionParagraphs = {
     _id: string;
 
@@ -30,8 +33,7 @@ export type Paragraph = {
 
     audio?: {
         path: string;
-        lengthMilli: number;
-    };
+    }[];
 
     usage: ModelUsage;
 };
@@ -42,7 +44,6 @@ export type Paragraph = {
 export type AISpec = {
     api: string;
     model: string;
-    params: { [key: string]: string };
 };
 
 export type ModelUsage = {

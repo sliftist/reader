@@ -12,6 +12,7 @@ if (isNode()) {
 import llama3tokenizer from "llama3-tokenizer-js";
 import { cacheLimited, lazy } from "socket-function/src/caching";
 import { getAPIKey } from "./apiKeys";
+import { addModelUsage } from "./globalUsage";
 
 
 export type AIChatBot = {
@@ -24,13 +25,9 @@ export type AIChatBot = {
     };
     chat: (config: {
         messages: AIMessage[];
-        usage?: {
-            input: number;
-            output: number;
-        };
         max_tokens?: number;
         // Called with parts of output, as we receive them
-        stream?: (newOutput: string) => void;
+        stream?: (fullOutput: string, newText: string) => void;
         json?: boolean;
         cancel?: { cancel: boolean };
     }) => Promise<string>;
@@ -88,16 +85,17 @@ export const aiChatBots = verifyType<AIChatBot>()({
         },
         chat: async config => {
             let inputTokens = config.messages.map(getMessageInputTokenCount).reduce((a, b) => a + b, 0);
-            if (config.usage) {
-                config.usage.input = inputTokens;
-                config.usage.output = 10;
-            }
+            addModelUsage({
+                cost: inputTokens / 10_000_000,
+                tokensIn: inputTokens,
+                tokensOut: 0,
+            });
             let result = JSON.stringify({
                 messageCount: config.messages.length,
                 inputTokens,
             });
             if (config.stream) {
-                config.stream(result);
+                config.stream(result, result);
             }
             return result;
         },
@@ -115,13 +113,14 @@ export const aiChatBots = verifyType<AIChatBot>()({
                 url: "http://127.0.0.1:8035/v1/chat/completions",
                 messages: config.messages,
                 headers: {},
-                usage: config.usage || { input: 0, output: 0 },
                 params: {
                     max_tokens: config.max_tokens,
                     response_format: config.json && { type: "json_object" } || undefined
                 },
                 stream: config.stream,
                 cancel: config.cancel,
+                inputTokensPerUSD: 10_000_000,
+                outputTokensPerUSD: 1_000_000,
             });
         }
     },
@@ -145,9 +144,10 @@ export const aiChatBots = verifyType<AIChatBot>()({
                     max_completion_tokens: config.max_tokens,
                     response_format: config.json && { type: "json_object" } || undefined
                 },
-                usage: config.usage || { input: 0, output: 0 },
                 stream: config.stream,
                 cancel: config.cancel,
+                inputTokensPerUSD: 200_000,
+                outputTokensPerUSD: 67_000,
             });
         }
     },
@@ -171,9 +171,10 @@ export const aiChatBots = verifyType<AIChatBot>()({
                     max_completion_tokens: config.max_tokens,
                     response_format: config.json && { type: "json_object" } || undefined
                 },
-                usage: config.usage || { input: 0, output: 0 },
                 stream: config.stream,
                 cancel: config.cancel,
+                inputTokensPerUSD: 6_700_000,
+                outputTokensPerUSD: 1_600_000,
             });
         }
     },
@@ -197,9 +198,10 @@ export const aiChatBots = verifyType<AIChatBot>()({
                     max_completion_tokens: config.max_tokens,
                     response_format: config.json && { type: "json_object" } || undefined
                 },
-                usage: config.usage || { input: 0, output: 0 },
                 stream: config.stream,
                 cancel: config.cancel,
+                inputTokensPerUSD: 66_700,
+                outputTokensPerUSD: 16_700,
             });
         }
     },
@@ -223,9 +225,10 @@ export const aiChatBots = verifyType<AIChatBot>()({
                     max_completion_tokens: config.max_tokens,
                     response_format: config.json && { type: "json_object" } || undefined
                 },
-                usage: config.usage || { input: 0, output: 0 },
                 stream: config.stream,
                 cancel: config.cancel,
+                inputTokensPerUSD: 333_000,
+                outputTokensPerUSD: 83_000,
             });
         }
     },
@@ -244,12 +247,13 @@ export const aiChatBots = verifyType<AIChatBot>()({
                 url: "https://prod-1-data.ke.pinecone.io/assistant/chat/mgmt/chat/completions",
                 messages: config.messages,
                 headers: api.headers,
-                usage: config.usage || { input: 0, output: 0 },
                 params: {
                     max_tokens: config.max_tokens,
                 },
                 stream: config.stream,
                 cancel: config.cancel,
+                inputTokensPerUSD: 125_000,
+                outputTokensPerUSD: 66_700,
             });
         }
     },
@@ -267,16 +271,13 @@ export async function callAIChatBot(config: {
     messages: AIMessage[];
     headers: { [key: string]: string };
     params?: { [key: string]: unknown | undefined };
-    usage: {
-        input: number;
-        output: number;
-    };
-    // Called with parts of output, as we receive them. "" indicates the call is finished.
-    stream?: (newOutput: string) => void;
+    stream?: (fullOutput: string, newOutput: string) => void;
     cancel?: { cancel: boolean };
     json?: boolean;
+    inputTokensPerUSD: number,
+    outputTokensPerUSD: number,
 }): Promise<string> {
-    let { messages, usage, stream, cancel } = config;
+    let { messages, stream, cancel } = config;
     let retries = 0;
     while (true) {
         try {
@@ -327,7 +328,7 @@ export async function callAIChatBot(config: {
                     let newData = data.choices[0].delta.content;
                     if (!newData) return;
                     curFullResult += newData;
-                    callback(curFullResult);
+                    callback(curFullResult, newData);
                 }
                 let reader = result.body?.getReader();
                 if (!reader) throw new Error("No body in response to our request");
@@ -383,8 +384,15 @@ export async function callAIChatBot(config: {
             if ("error" in obj) {
                 throw new Error(obj.error.message + " " + obj.error.type);
             }
-            usage.input += obj.usage.prompt_tokens;
-            usage.output += obj.usage.completion_tokens;
+
+            let input = obj.usage.prompt_tokens;
+            let output = obj.usage.completion_tokens;
+            let cost = input / config.inputTokensPerUSD + output / config.outputTokensPerUSD;
+            addModelUsage({
+                cost,
+                tokensIn: input,
+                tokensOut: output,
+            });
 
             console.log(magenta(obj.choices[0].message.content));
             let message = obj.choices[0].message as any || "";

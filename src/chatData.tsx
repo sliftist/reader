@@ -10,7 +10,8 @@ let paragraphs = new DiskCollection<Paragraph>("Paragraph");
 
 
 export function getSessionList(): Session[] {
-    return sessions.getValues();
+    let list = sessions.getValues();
+    return list.map(x => ({ ...x, usage: x.usage || { cost: 0, tokensIn: 0, tokensOut: 0 } }));
 }
 
 
@@ -23,6 +24,9 @@ export async function setSession(session: Session) {
 }
 export async function deleteSession(session: string) {
     sessions.remove(session);
+}
+export function getSession(id: string): Session | undefined {
+    return sessions.get(id);
 }
 
 export function getSessionParagraphs(session: string): Paragraph[] {
