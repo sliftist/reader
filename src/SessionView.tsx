@@ -197,6 +197,7 @@ export class SessionView extends preact.Component {
             await setSessionSpeakers(sessionId, sessionSpeakers);
         }
         async function segment(paragraph: Paragraph) {
+            self.synced.hideSpeakerSegments = false;
             let prev = paragraphs[paragraphs.indexOf(paragraph) - 1];
             self.synced.segmenting = true;
             try {
