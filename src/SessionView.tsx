@@ -384,7 +384,7 @@ export class SessionView extends preact.Component {
 
                                 <div className={css.marginAuto} />
                                 <div>{paragraph.usage.tokensIn} {"=>"} {paragraph.usage.tokensOut}</div>
-                                <div>{(paragraph.usage.cost * 1000).toFixed(2)} thousandths cents</div>
+                                <div>{formatNumber(paragraph.usage.cost * 100)} cents</div>
                                 <button onClick={() => {
                                     this.synced.lastDelete = paragraph._id;
                                     return deleteSessionParagraph(sessionId, paragraph._id);

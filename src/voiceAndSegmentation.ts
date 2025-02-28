@@ -392,7 +392,7 @@ export async function encodeVoice(config: {
                 //style: 0.5,
                 use_speaker_boost: false,
             },
-            seed: 1,
+            //seed: 1,
 
             //previous_text: "",
             //next_text: "",

@@ -1,52 +1,83 @@
 todonext
 
+Switch to aigrow interface
+
+
+Use up our monthly usage
+    - A story with space travel. A female pilot stranded, and discovering strange things in space.
+        - CLI
+            - Copy from our extension output to another file
+            - CLI to split the text into speakers
+                - Modifies it inline
+            - Another CLI to generate audio
+                - Also modified it inline, injecting paths to audio (which is stored in a side-by-side cache folder, with random ids)
+            - Another CLI to play the audio
+            - Then support setting narration to use another AI, so we can use this when we don't have 50K unused tokens burning a hole in our pocket (which is only really 100 minutes of narration, so... not even that much...)
+
+
 9) ElevenLabs model dropdown selector
+    - Compare turbo and see if it's passable
 
 10) Local model runner
     - Via providing local port?
     - We'll have to make sure this works even if we are running it on a real site
     - Eleven labs is too expensive! Over a dollar per 1000 tokens!
 
+10) Pass previous and next text
+
+11) Audio sometimes stops before fully reading through
+    - Add some logging for times when we generate, play, and finish, to help start diagnosing it
+
 10.1) Allow a model for speaking, and a model for narration
-    - Also, better speaking splitting, as right now it's not great...
+    - Store character count in segments, show the count for narrator vs speaking. This will let us know the fraction we will be saving by using a cheap model for the narrator
 
-11) Test all voices, and remove bad voices (the narrator/ad voices)
-
-7) Allow editting of segments directly
-
-8) Cache segments (at least in memory), so if there is an edit, we don't regenerate ALL of them
-    - But, ONLY if there is an edit. If they just click regenerate, without an edit, make new audio.
-
-8.1) Regenerate audio button PER segment, so we can vary performances.
-    - We need audio to be associated with the segment, instead of just flat as we are doing now
-
-9) Assign speaker persistent hues, so we can try to make sure they vary more
+11) Test all voices, and remove bad voices (the ad voices)
 
 
-10) Better speaker segmentation, to not lose narration as much?
-    - Maybe use an inline format, basically parsing speakers ourselves, and just getting the AI to inject names to help us
-        ALTHOUGH, maybe some text, such as "he said", is not needed, as... if he literally says it, then... that's completely redundant.
 
-8) Tell the AI to add elevenlabs syntax
-    "Give me one second to think about it." <break time="1.0s" /> "Yes, that would work."
-    <phoneme alphabet="ipa" ph="ˈæktʃuəli">actually</phoneme>
-    - ALSO, encode breaks between speakers, so we can have them cut each other off, etc
-    - ALSO, reload audio into memory when playing it, so there isn't a delay to load the audio from disk, decode it, etc
 
-6) Support saving/restoring data from google drive
-    - And maybe auto saving it every... day? Or week?
+5) Get rid of "notAudible", it's not needed
+6) Change from "speaker" to something else
+    AND change it so we assume each paragraph will solely contain narration + a speaker
+    - Ideas:
+        source
+        voice
+        owner
+    - "narrator" will be hardcoded for narrator
 
-9) Voice caching?
-    - Mostly in case we edit a very large paragraph slightly? Although... how many times will we do that...
+8) Split audio so it associated with each segment, instead of flat
+8.1) Button to regenerate per segment
+8.2) Allow editting of segments directly
+    - If a segment is out of date with the audio, indicate this in the UI
+    - When we regnerate the audio, if if any segments are out of date, just generate those. If none are, then regenerate all of them.
+
+
+6) Support a syntax for paragraphs which specifies the speaker directly
+    Tracy :: What's going on?
+    narrator :: Trace was very confused.
+    - The syntax is, if there is a :: in the first 10 words
+    - This is used when segmenting, skipping asking the ai
+8) Test instructing the AI to directly set speakers, splitting up paragraphs by them?
+    - Might create better stories, so it is more like an audio drama
+
+
+
+9) Assign speaker's persistent hues, so we can try to make sure the colors vary more
+
 
 10) Custom voices
     - Do voices we add in the site show up in our voices?
     - Try to add some library voices.
     - Try to add our voice, or... other voices.
 
-10) Use eslint-plugin-no-disposable-without-using, somehow?
+
+11) Better looking UI
+    - colors, especially
+
 
 Advanced Features
+    Maybe... a vs code UI, where we auto-scroll to match the two windows? Hmm...
+
     Two column display
         - Outline => output model, instead of chat
         - Two colums of textboxes on each size, which grow to the text size
@@ -54,8 +85,6 @@ Advanced Features
         - The focused textbox is always in the center, with the corresponding output beside it (in the other column)
             - The other boxes are rendered tightly packed
         - Page up / page down move between textboxes?
-
-
 
     Variable support
         - Mostly for common prompt templates
@@ -101,6 +130,12 @@ Advanced Features
 
         NOTE: If you just want to give directions, that can be done inline, such as *AI, please add description of the room here*, although that is probably best put in a variable, so that can be reused.
 
+    Wrapping prompts for detail-expanded code?
+        @per_paragraph("./source.txt",`
+            @very_descriptive
+            add description to @pargraph
+        `)
+
     Better context
         - Dynamically determine embedding query with AI
         - Search other books, etc
@@ -117,3 +152,30 @@ Advanced Features
 
     Specific extraction for context
         - Places, characters, etc
+
+    10) Special audio transform so we can distinguish internal monologue, while still making it sound like a character
+        - Echo?
+        - Muffled?
+
+    9) Use some kind of break/phoneme syntax, which we convert to the elevenlabs syntax / other syntax
+        - Maybe just... ipa, and then detect it when we are passing it to eleven labs
+            - Breaks as well?
+    8) AI transform step to add breaks and phonemes
+        "Give me one second to think about it." <break time="1.0s" /> "Yes, that would work."
+        <phoneme alphabet="ipa" ph="ˈæktʃuəli">actually</phoneme>
+
+    6) Support saving/restoring data from google drive
+        - And maybe auto saving it every... day? Or week?
+
+    7) Conditional parts
+        @if(@paragraph has dialogue, "preserve all dialogue, adding if necessary")
+
+    8) Dynamically include list of ideas
+        - Basically, so many conditionals that we put them in a database, using embeddings / ai to decide which instructions to include.
+
+    9) Voice => text input
+        - Automatic interruption of spoken outputs
+        - Combining multiple responses to fine-tune an input ("no, not that", etc), so we can create one cohesive story.
+
+
+Use eslint-plugin-no-disposable-without-using
